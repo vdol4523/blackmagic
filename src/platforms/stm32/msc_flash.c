@@ -208,7 +208,24 @@ static struct target_controller msc_controller = {
 
 int msc_flash_init(void)
 {
-	uint32_t size;
+	uint32_t size = 1;
+
+	platform_srst_set_val(true);
+	int devs = -1;
+	volatile struct exception e;
+	TRY_CATCH (e, EXCEPTION_ALL) {
+		devs = adiv5_swdp_scan();
+	}
+
+	if(devs <= 0) {
+		platform_srst_set_val(false);
+		gdb_out("SW-DP scan failed!\n");
+		return false;
+	}
+
+	target t = target_attach_n(1, &msc_controller);
+	
+	// TODO: get size, halt...
 	
 	BootSector[0x13]= size & 0xff;
 	BootSector[0x14]= (size>>8) & 0xff;
