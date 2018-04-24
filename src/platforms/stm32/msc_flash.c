@@ -65,15 +65,6 @@ uint8_t FatSector[] = {
 	0xF8, 0xFF, 0xFF
 };
 
-int msc_flash_init(uint32_t size)
-{
-	BootSector[0x13]= size & 0xff;
-	BootSector[0x14]= (size>>8) & 0xff;
-	BootSector[0x15]= (size>>16) & 0xff;
-	BootSector[0x16]= (size>>24) & 0xff;
-
-	return 0;
-}
 
 int msc_flash_read(uint32_t lba, uint8_t *copy_to)
 {
@@ -175,6 +166,26 @@ static int msc_system(struct target_controller *tc,
 	return msc_not_impl(tc);
 }
 
+static target *cur_target;
+static target *last_target;
+
+static void msc_target_destroy_callback(struct target_controller *tc, target *t)
+{
+	(void)tc;
+	if (cur_target == t)
+		cur_target = NULL;
+
+	if (last_target == t)
+		last_target = NULL;
+}
+
+static void msc_target_printf(struct target_controller *tc,
+                              const char *fmt, va_list ap)
+{
+	(void)tc;
+	(void)fmt;
+	(void)ap;
+}
 
 static struct target_controller msc_controller = {
 	.destroy_callback = msc_target_destroy_callback,
@@ -193,3 +204,16 @@ static struct target_controller msc_controller = {
 	.isatty = msc_isatty,
 	.system = msc_system,
 };
+
+
+int msc_flash_init(void)
+{
+	uint32_t size;
+	
+	BootSector[0x13]= size & 0xff;
+	BootSector[0x14]= (size>>8) & 0xff;
+	BootSector[0x15]= (size>>16) & 0xff;
+	BootSector[0x16]= (size>>24) & 0xff;
+
+	return 0;
+}
