@@ -98,29 +98,83 @@ int msc_flash_blocks(void)
 	return (BootSector[0x13]) + (BootSector[0x14]<<8) + (BootSector[0x15]<<16) + (BootSector[0x16]<<24);
 }
 
-static int msc_open(struct target_controller *,
+static int msc_not_impl(struct target_controller *tc)
+{
+	tc->errno_ = -22;
+	return -1;
+}
+
+static int msc_open(struct target_controller *tc,
 	        target_addr path, size_t path_len,
-                enum target_open_flags flags, mode_t mode);
-static int msc_close(struct target_controller *, int fd);
-static int msc_read(struct target_controller *,
-	         int fd, target_addr buf, unsigned int count);
-static int msc_write(struct target_controller *,
-	          int fd, target_addr buf, unsigned int count);
-static long msc_lseek(struct target_controller *,
-	           int fd, long offset, enum target_seek_flag flag);
-static int msc_rename(struct target_controller *,
+                enum target_open_flags flags, mode_t mode)
+{
+	return msc_not_impl(tc);
+}
+
+static int msc_close(struct target_controller *tc, int fd)
+{
+	return msc_not_impl(tc);
+}
+
+static int msc_read(struct target_controller *tc,
+	         int fd, target_addr buf, unsigned int count)
+{
+	return msc_not_impl(tc);
+}
+
+static int msc_write(struct target_controller *tc,
+	          int fd, target_addr buf, unsigned int count)
+{
+	return msc_not_impl(tc);
+}
+
+static long msc_lseek(struct target_controller *tc,
+	           int fd, long offset, enum target_seek_flag flag)
+{
+	return msc_not_impl(tc);
+}
+
+static int msc_rename(struct target_controller *tc,
 	           target_addr oldpath, size_t old_len,
-	           target_addr newpath, size_t new_len);
-static int msc_unlink(struct target_controller *,
-	           target_addr path, size_t path_len);
-static int msc_stat(struct target_controller *,
-	         target_addr path, size_t path_len, target_addr buf);
-static int msc_fstat(struct target_controller *, int fd, target_addr buf);
-static int msc_gettimeofday(struct target_controller *,
-		         target_addr tv, target_addr tz);
-static int msc_isatty(struct target_controller *, int fd);
-static int msc_system(struct target_controller *,
-	           target_addr cmd, size_t cmd_len);
+	           target_addr newpath, size_t new_len)
+{
+	return msc_not_impl(tc);
+}
+
+static int msc_unlink(struct target_controller *tc,
+	           target_addr path, size_t path_len)
+{
+	return msc_not_impl(tc);
+}
+
+static int msc_stat(struct target_controller *tc,
+	         target_addr path, size_t path_len, target_addr buf)
+{
+	return msc_not_impl(tc);
+}
+
+static int msc_fstat(struct target_controller *tc, int fd, target_addr buf)
+{
+	return msc_not_impl(tc);
+}
+
+static int msc_gettimeofday(struct target_controller *tc,
+		         target_addr tv, target_addr tz)
+{
+	return msc_not_impl(tc);
+}
+
+static int msc_isatty(struct target_controller *tc, int fd)
+{
+	return msc_not_impl(tc);
+}
+
+static int msc_system(struct target_controller *tc,
+	           target_addr cmd, size_t cmd_len)
+{
+	return msc_not_impl(tc);
+}
+
 
 static struct target_controller msc_controller = {
 	.destroy_callback = msc_target_destroy_callback,
