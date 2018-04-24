@@ -311,6 +311,42 @@ static const struct usb_iface_assoc_descriptor dfu_assoc = {
 	.iFunction = 6,
 };
 
+//////////////////////
+static const struct usb_endpoint_descriptor msc_endp[] = {{
+	.bLength = USB_DT_ENDPOINT_SIZE,
+	.bDescriptorType = USB_DT_ENDPOINT,
+	.bEndpointAddress = 0x04,
+	.bmAttributes = USB_ENDPOINT_ATTR_BULK,
+	.wMaxPacketSize = 64,
+	.bInterval = 0,
+}, {
+	.bLength = USB_DT_ENDPOINT_SIZE,
+	.bDescriptorType = USB_DT_ENDPOINT,
+	.bEndpointAddress = 0x86,
+	.bmAttributes = USB_ENDPOINT_ATTR_BULK,
+	.wMaxPacketSize = 64,
+	.bInterval = 0,
+}};
+
+static const struct usb_interface_descriptor msc_iface[] = {{
+	.bLength = USB_DT_INTERFACE_SIZE,
+	.bDescriptorType = USB_DT_INTERFACE,
+	.bInterfaceNumber = 0,
+	.bAlternateSetting = 0,
+	.bNumEndpoints = 2,
+	.bInterfaceClass = USB_CLASS_MSC,
+	.bInterfaceSubClass = USB_MSC_SUBCLASS_SCSI,
+	.bInterfaceProtocol = USB_MSC_PROTOCOL_BBB,
+	.iInterface = 7,
+	.endpoint = msc_endp,
+	.extra = NULL,
+	.extralen = 0
+}};
+
+
+
+//////////////////////
+
 #if defined(PLATFORM_HAS_TRACESWO)
 static const struct usb_endpoint_descriptor trace_endp[] = {{
 	.bLength = USB_DT_ENDPOINT_SIZE,
@@ -330,7 +366,7 @@ const struct usb_interface_descriptor trace_iface = {
 	.bInterfaceClass = 0xFF,
 	.bInterfaceSubClass = 0xFF,
 	.bInterfaceProtocol = 0xFF,
-	.iInterface = 7,
+	.iInterface = 8,
 
 	.endpoint = trace_endp,
 };
@@ -338,7 +374,7 @@ const struct usb_interface_descriptor trace_iface = {
 static const struct usb_iface_assoc_descriptor trace_assoc = {
 	.bLength = USB_DT_INTERFACE_ASSOCIATION_SIZE,
 	.bDescriptorType = USB_DT_INTERFACE_ASSOCIATION,
-	.bFirstInterface = 5,
+	.bFirstInterface = 6,
 	.bInterfaceCount = 1,
 	.bFunctionClass = 0xFF,
 	.bFunctionSubClass = 0xFF,
@@ -365,6 +401,9 @@ static const struct usb_interface ifaces[] = {{
 	.num_altsetting = 1,
 	.iface_assoc = &dfu_assoc,
 	.altsetting = &dfu_iface,
+}, {
+	.num_altsetting = 1,
+	.altsetting = &msc_iface,
 #if defined(PLATFORM_HAS_TRACESWO)
 }, {
 	.num_altsetting = 1,
@@ -390,6 +429,8 @@ static const struct usb_config_descriptor config = {
 	.interface = ifaces,
 };
 
+
+
 #if defined(STM32L0) || defined(STM32F3) || defined(STM32F4)
 char serial_no[13];
 #else
@@ -403,6 +444,7 @@ static const char *usb_strings[] = {
 	"Black Magic GDB Server",
 	"Black Magic UART Port",
 	DFU_IDENT,
+	"Black Magic MSC Flash",
 #if defined(PLATFORM_HAS_TRACESWO)
 	"Black Magic Trace Capture",
 #endif
@@ -552,6 +594,10 @@ void cdcacm_init(void)
 	usbdev = usbd_init(&USB_DRIVER, &dev, &config, usb_strings,
 			    sizeof(usb_strings)/sizeof(char *),
 			    usbd_control_buffer, sizeof(usbd_control_buffer));
+	
+	msc_flash_init();
+	usb_msc_init(usbdev, 0x86, 64, 0x04, 64, "VendorID", "ProductID",
+		"0.00", msc_flash_blocks(), msc_flash_read, msc_flash_write);
 
 	usbd_register_set_config_callback(usbdev, cdcacm_set_config);
 
