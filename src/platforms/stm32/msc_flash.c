@@ -97,3 +97,22 @@ int msc_flash_blocks(void)
 {
 	return (BootSector[0x13]) + (BootSector[0x14]<<8) + (BootSector[0x15]<<16) + (BootSector[0x16]<<24);
 }
+
+
+static struct target_controller msc_controller = {
+	.destroy_callback = msc_target_destroy_callback,
+	.printf = msc_target_printf,
+
+	.open = msc_open,
+	.close = msc_close,
+	.read = msc_read,
+	.write = msc_write,
+	.lseek = msc_lseek,
+	.rename = msc_rename,
+	.unlink = hostio_unlink,
+	.stat = msc_stat,
+	.fstat = msc_fstat,
+	.gettimeofday = msc_gettimeofday,
+	.isatty = msc_isatty,
+	.system = msc_system,
+};
