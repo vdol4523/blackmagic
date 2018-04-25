@@ -65,6 +65,8 @@ uint8_t FatSector[] = {
 	0xF8, 0xFF, 0xFF
 };
 
+static bool erase_flag = true;
+struct target_s *curr_target;
 
 int msc_flash_read(uint32_t lba, uint8_t *copy_to)
 {
@@ -81,6 +83,24 @@ int msc_flash_read(uint32_t lba, uint8_t *copy_to)
 
 int msc_flash_write(uint32_t lba, const uint8_t *copy_from)
 {
+	if (lba < DATA_REGION_SECTOR) {
+		erase_flag = true;
+	} else {
+		if (!curr_target  ||  ! t->attached) {
+			curr_target = target_attach_n(1, &msc_controller);
+		}
+		struct target_s *t = curr_target;
+		if (t  && t->attached) {
+			target_halt_request(t);
+			while(target_halt_poll(t, NULL) == TARGET_HALT_RUNNING)
+				;
+			if (erase_flag) {
+				target_command(t, "erase_mass");
+				erase_flag = false;
+			}
+			target_target_flash_write(t, t->flash->start + lba*SECTOR_SIZE, copy_from, SECTOR_SIZE)
+		}
+	}
 	return 0;
 }
 
@@ -223,14 +243,16 @@ int msc_flash_init(void)
 		return false;
 	}
 
-	target t = target_attach_n(1, &msc_controller);
+	curr_target = target_attach_n(1, &msc_controller);
 	
-	// TODO: get size, halt...
-	
-	BootSector[0x13]= size & 0xff;
-	BootSector[0x14]= (size>>8) & 0xff;
-	BootSector[0x15]= (size>>16) & 0xff;
-	BootSector[0x16]= (size>>24) & 0xff;
+	if (curr_target->flash) {
+		size = (curr_target->flash->length + SECTOR_SIZE-1)/SECTOR_SIZE + DATA_REGION_SECTOR;
+		BootSector[0x13]= size & 0xff;
+		BootSector[0x14]= (size>>8) & 0xff;
+		BootSector[0x15]= (size>>16) & 0xff;
+		BootSector[0x16]= (size>>24) & 0xff;
+	}
+	erase_flag = true;
 
 	return 0;
 }
